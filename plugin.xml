@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="innometrics.commands.category"
+            name="EclipseLogger Category">
+      </category>
+      <command
+            categoryId="innometrics.commands.category"
+            id="innometrics.commands.Login"
+            name="Login">
+      </command>
+      <command
+            categoryId="innometrics.commands.category"
+            id="innometrics.commands.Stop"
+            name="Stop">
+      </command>
+   </extension>
+   <extension point="org.eclipse.ui.startup">
+     <startup class="handlers.EclipseLoggerStartup"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="handlers.LoginHandler"
+            commandId="innometrics.commands.Login">
+      </handler>
+      <handler
+            class="handlers.StopHandler"
+            commandId="innometrics.commands.Stop">
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="innometrics.commands.Login"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+6">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               id="innometrics.menus.eclipseLoggerMenu"
+               label="EcpliseLogger"
+               mnemonic="M">
+            <command
+                  commandId="innometrics.commands.Login"
+                  id="innometrics.menus.sampleCommand"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="innometrics.commands.Stop"
+                  id="innometrics.menus.sampleCommand1"
+                  mnemonic="S">
+            </command>
+         </menu>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="innometrics.toolbars.sampleToolbar">
+            <command
+                  commandId="innometrics.commands.Login"
+                  icon="icons/sample.png"
+                  id="innometrics.toolbars.sampleCommand"
+                  tooltip="Say hello world">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+</plugin>
