@@ -5,16 +5,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.*;
 import db.Database;
+import metrics.CodeMetric;
 import metrics.Metric;
 import server.Server;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 	
 	private Metric metric;
+	private CodeMetric codeMetric;
 	
 	@Override
 	public void earlyStartup() {
@@ -62,6 +67,19 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 			this.metric = new Metric(name);
 		}
 	}
+	
+	private void storeNewCodeMetric(String name, String code) {
+		if (this.codeMetric == null) {
+			this.codeMetric = new CodeMetric(name, code);
+		} else {
+			List<Metric> metrics = this.codeMetric.finish(code);
+			for (Metric metric: metrics) {
+				metric.print();
+				saveMetric(metric);
+			}
+			this.codeMetric = new CodeMetric(name, code);
+		}
+	}
 
 	private IWindowListener generateWindowListener() {
 		return new IWindowListener() {
@@ -97,6 +115,20 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 						// TODO Auto-generated method stub
 						System.out.println("Property changed");
 						System.out.println(source);
+						if (source instanceof ITextEditor)
+						 {
+						   ITextEditor textEditor = (ITextEditor)source;
+
+						   IDocumentProvider provider = textEditor.getDocumentProvider();
+
+						   IEditorInput input = textEditor.getEditorInput();
+
+						   IDocument document = provider.getDocument(input);
+
+						   String text = document.get();
+
+						   storeNewCodeMetric("bla", text);
+						 }
 					}
 					
 				});

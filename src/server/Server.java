@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -149,6 +150,7 @@ public class Server {
 				json_metric.put("ip_address", metric.session.ipAddr);
 				json_metric.put("mac_address", metric.session.macAddr);
 				json_metric.put("activity_type", metric.activity_type);
+				json_metric.put("value", metric.value);
 				activities.put(json_metric);
 			}
 			JSONObject data = new JSONObject();
@@ -183,6 +185,9 @@ public class Server {
 				}
 				return false;
 			}
+		} catch (ConnectException e) {
+			this.token = null;
+			sendMetrics(metrics);
 		} catch (ClientProtocolException e) {
 			CollectorLogger.getLogger().warning(e.getMessage());
 		} catch (IOException e) {

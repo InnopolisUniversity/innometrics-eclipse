@@ -25,4 +25,5 @@ Bundle-ClassPath: sqlite-jdbc-3.23.1.jar,
  httpmime-4.5.6.jar,
  jna-4.4.0.jar,
  jna-platform-4.4.0.jar,
- java-json.jar
+ java-json.jar,
+ diffutils-1.2.1.jar

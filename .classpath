@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="diffutils-1.2.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="java-json.jar"/>
 	<classpathentry exported="true" kind="lib" path="commons-codec-1.10.jar"/>
 	<classpathentry exported="true" kind="lib" path="commons-logging-1.2.jar"/>

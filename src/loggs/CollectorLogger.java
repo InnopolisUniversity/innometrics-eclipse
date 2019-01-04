@@ -19,7 +19,8 @@ public class CollectorLogger extends Logger {
 			FileHandler fh;  
 
 		    try {   
-		        fh = new FileHandler("logs/EclipseCollectorLogFile.log");  
+		    	String filePath = System.getProperty("user.dir") + "logs/EclipseCollectorLogFile.log";
+		        fh = new FileHandler(filePath);  
 		        loggger.addHandler(fh);
 		        SimpleFormatter formatter = new SimpleFormatter();  
 		        fh.setFormatter(formatter);  
