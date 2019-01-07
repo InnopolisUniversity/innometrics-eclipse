@@ -87,7 +87,6 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 			List<Metric> metrics = codeMetric.finish(code);
 			if (metrics.size() > 0) {
 				for (Metric metric: metrics) {
-					metric.print();
 					saveMetric(metric);
 				}
 				codeMetric = new CodeMetric(fileName, code);

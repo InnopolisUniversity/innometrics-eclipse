@@ -69,7 +69,6 @@ public class Database {
 		try {
 			stmt.executeUpdate(sql);
 		} catch (SQLException e){
-			System.out.println(e);
 			// Tables were already created
 		}
 	}

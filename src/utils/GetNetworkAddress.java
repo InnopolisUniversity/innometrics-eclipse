@@ -21,8 +21,12 @@ public class GetNetworkAddress {
             while (net.hasMoreElements()) {
                 NetworkInterface element = net.nextElement();
                 Enumeration<InetAddress> addresses = element.getInetAddresses();
+                if (addresses == null) {
+                	continue;
+                }
 
-                while (addresses.hasMoreElements() && element.getHardwareAddress().length > 0 && !isVMMac(element.getHardwareAddress())) {
+                while (addresses.hasMoreElements() && element.getHardwareAddress() != null
+                		&& element.getHardwareAddress().length > 0 && !isVMMac(element.getHardwareAddress())) {
                     InetAddress ip = addresses.nextElement();
                     if (ip instanceof Inet4Address) {
 
