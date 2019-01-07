@@ -5,17 +5,17 @@
          point="org.eclipse.ui.commands">
       <category
             id="innometrics.commands.category"
-            name="EclipseLogger Category">
+            name="%category.name">
       </category>
       <command
             categoryId="innometrics.commands.category"
             id="innometrics.commands.Login"
-            name="Login">
+            name="%command.name">
       </command>
       <command
             categoryId="innometrics.commands.category"
             id="innometrics.commands.Stop"
-            name="Stop">
+            name="%command.name.0">
       </command>
    </extension>
    <extension point="org.eclipse.ui.startup">
@@ -47,17 +47,17 @@
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
                id="innometrics.menus.eclipseLoggerMenu"
-               label="EcpliseLogger"
-               mnemonic="M">
+               label="%menu.label"
+               mnemonic="%menu.mnemonic">
             <command
                   commandId="innometrics.commands.Login"
                   id="innometrics.menus.sampleCommand"
-                  mnemonic="S">
+                  mnemonic="%command.mnemonic">
             </command>
             <command
                   commandId="innometrics.commands.Stop"
                   id="innometrics.menus.sampleCommand1"
-                  mnemonic="S">
+                  mnemonic="%command.mnemonic.0">
             </command>
          </menu>
       </menuContribution>
@@ -69,7 +69,7 @@
                   commandId="innometrics.commands.Login"
                   icon="icons/sample.png"
                   id="innometrics.toolbars.sampleCommand"
-                  tooltip="Say hello world">
+                  tooltip="%command.tooltip">
             </command>
          </toolbar>
       </menuContribution>
