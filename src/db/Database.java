@@ -54,7 +54,7 @@ public class Database {
 	private void createTables() throws SQLException {
 		Statement stmt = getNewStatement();
 		String sql = 
-				"DROP TABLE METRIC; DROP TABLE TOKEN; CREATE TABLE METRIC " +
+				"CREATE TABLE METRIC " +
 				"(ID INTEGER PRIMARY KEY," +
 				" name           TEXT    NOT NULL, " + 
 				" start_date     varchar(50)     NOT NULL, " + 

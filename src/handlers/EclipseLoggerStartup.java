@@ -1,5 +1,6 @@
 package handlers;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,11 +20,12 @@ import org.eclipse.ui.texteditor.ITextEditor;
 public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 	
 	private Metric metric;
-	private CodeMetric codeMetric;
+	private HashMap<String, CodeMetric> codeMetrics = new HashMap<String, CodeMetric>();
+	private HashMap<IWorkbenchPart, IPropertyListener> partListeners = new HashMap<IWorkbenchPart, IPropertyListener>();
+	private HashMap<IWorkbenchPage, IPartListener2> pageListeners = new HashMap<IWorkbenchPage, IPartListener2>();
 	
 	@Override
 	public void earlyStartup() {
-		System.out.println("Started");
 		sendOfflineData();
 		IWorkbench wb = PlatformUI.getWorkbench();
 		wb.addWindowListener(generateWindowListener());
@@ -68,126 +70,137 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 		}
 	}
 	
-	private void storeNewCodeMetric(String name, String code) {
-		if (this.codeMetric == null) {
-			this.codeMetric = new CodeMetric(name, code);
-		} else {
-			List<Metric> metrics = this.codeMetric.finish(code);
-			for (Metric metric: metrics) {
-				metric.print();
-				saveMetric(metric);
-			}
-			this.codeMetric = new CodeMetric(name, code);
+	private void stopMetric() {
+		if (this.metric != null) {
+			this.metric.finish();
+			saveMetric(metric);
+			this.metric = null;
 		}
+		
+	}
+	
+	private void storeNewCodeMetric(String fileName, String code) {
+		CodeMetric codeMetric = codeMetrics.get(fileName);
+		if (codeMetric == null) {
+			codeMetric = new CodeMetric(fileName, code);
+		} else {
+			List<Metric> metrics = codeMetric.finish(code);
+			if (metrics.size() > 0) {
+				for (Metric metric: metrics) {
+					metric.print();
+					saveMetric(metric);
+				}
+				codeMetric = new CodeMetric(fileName, code);
+			}
+		}
+		codeMetrics.put(fileName, codeMetric);
 	}
 
 	private IWindowListener generateWindowListener() {
 		return new IWindowListener() {
 			@Override
 			public void windowOpened(IWorkbenchWindow window) {
-				System.out.println("Window started");
-				IWorkbenchPage activePage = window.getActivePage();
-				System.out.flush();
-				System.out.flush();
-				activePage.addPartListener(generateIPartListener2());
+				addCodeListener(window.getActivePage().getActivePart());
+				addPageListener(window.getActivePage());
 			}
 
 			@Override
 			public void windowDeactivated(IWorkbenchWindow window) {
-				System.out.println("Window deactivated");
+				stopMetric();
 			}
 
 			@Override
 			public void windowClosed(IWorkbenchWindow window) {
-				System.out.println("Window closed");
+				stopMetric();
 			}
 
 			@Override
 			public void windowActivated(IWorkbenchWindow window) {
-				System.out.println("Window activated");
-				IWorkbenchPage activePage = window.getActivePage();
-				System.out.println(activePage.getActiveEditor().getEditorInput().getName());
-				System.out.println(activePage.getActivePart().getTitle());
-				activePage.getActivePart().addPropertyListener(new IPropertyListener() {
+				addCodeListener(window.getActivePage().getActivePart());
+				addPageListener(window.getActivePage());
+			}
+			
+			private void addPageListener(IWorkbenchPage page) {
+				IPartListener2 listener = pageListeners.get(page);
+				if (listener == null) {
+					listener = generateIPartListener2();
+					page.addPartListener(listener);
+					pageListeners.put(page, listener);
+				}
+				
+			}
+			
+			private void addCodeListener(IWorkbenchPart part) {
+				String title = part.getTitle();
+
+				IPropertyListener listener = partListeners.get(part);
+				if (listener == null) {
+					listener = new IPropertyListener() {
+
+						@Override
+						public void propertyChanged(Object source, int propId) {
+							if (source instanceof ITextEditor)
+							 {
+							   ITextEditor textEditor = (ITextEditor)source;
+
+							   IDocumentProvider provider = textEditor.getDocumentProvider();
+
+							   IEditorInput input = textEditor.getEditorInput();
+
+							   IDocument document = provider.getDocument(input);
+
+							   String text = document.get();
+
+							   storeNewCodeMetric(title, text);
+							 }
+						}
+					};
+					part.addPropertyListener(listener);
+					partListeners.put(part, listener);
+				}
+			}
+			
+			private IPartListener2 generateIPartListener2() {
+				return new IPartListener2() {
 
 					@Override
-					public void propertyChanged(Object source, int propId) {
-						// TODO Auto-generated method stub
-						System.out.println("Property changed");
-						System.out.println(source);
-						if (source instanceof ITextEditor)
-						 {
-						   ITextEditor textEditor = (ITextEditor)source;
-
-						   IDocumentProvider provider = textEditor.getDocumentProvider();
-
-						   IEditorInput input = textEditor.getEditorInput();
-
-						   IDocument document = provider.getDocument(input);
-
-						   String text = document.get();
-
-						   storeNewCodeMetric("bla", text);
-						 }
+					public void partOpened(IWorkbenchPartReference partRef) {
+						storeNewMetric(partRef.getTitle());
+						addCodeListener(partRef.getPart(true));
 					}
-					
-				});
-				activePage.addPartListener(generateIPartListener2());
+
+					@Override
+					public void partInputChanged(IWorkbenchPartReference partRef) {
+					}
+
+					@Override
+					public void partVisible(IWorkbenchPartReference partRef) {
+					}
+
+					@Override
+					public void partHidden(IWorkbenchPartReference partRef) {
+					}
+
+					@Override
+					public void partDeactivated(IWorkbenchPartReference partRef) {
+					}
+
+					@Override
+					public void partClosed(IWorkbenchPartReference partRef) {
+					}
+
+					@Override
+					public void partBroughtToTop(IWorkbenchPartReference partRef) {
+					}
+
+					@Override
+					public void partActivated(IWorkbenchPartReference partRef) {
+						storeNewMetric(partRef.getTitle());
+						addCodeListener(partRef.getPart(true));
+					}
+				};
 			}
 		};
 	}
 
-	private IPartListener2 generateIPartListener2() {
-		return new IPartListener2() {
-
-			@Override
-			public void partOpened(IWorkbenchPartReference partRef) {
-				System.out.println("Part Opened");
-				
-				System.out.println(partRef.getTitle());
-				storeNewMetric(partRef.getTitle());
-			}
-
-			@Override
-			public void partInputChanged(IWorkbenchPartReference partRef) {
-				System.out.println("Part Input Changed");
-				//checkPart(partRef);
-			}
-
-			@Override
-			public void partVisible(IWorkbenchPartReference partRef) {
-				System.out.println("Part visible");
-			}
-
-			@Override
-			public void partHidden(IWorkbenchPartReference partRef) {
-				System.out.println("Part hidden");
-				System.out.println(partRef.getTitle());
-			}
-
-			@Override
-			public void partDeactivated(IWorkbenchPartReference partRef) {
-				System.out.println("Part deactivated");
-				System.out.println(partRef.getTitle());
-			}
-
-			@Override
-			public void partClosed(IWorkbenchPartReference partRef) {
-				System.out.println("Part closed");
-				System.out.println(partRef.getTitle());
-			}
-
-			@Override
-			public void partBroughtToTop(IWorkbenchPartReference partRef) {
-				System.out.println("Part Brought to top");
-			}
-
-			@Override
-			public void partActivated(IWorkbenchPartReference partRef) {
-				System.out.println("Part Activated");
-				System.out.println(partRef.getTitle());
-				storeNewMetric(partRef.getTitle());
-			}
-		};
-	}
 }

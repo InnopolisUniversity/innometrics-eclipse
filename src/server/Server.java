@@ -113,7 +113,7 @@ public class Server {
 			if (entity != null) {
 				String response_string = EntityUtils.toString(entity);
 				JSONObject result = new JSONObject(response_string);
-
+				System.out.println(result);
 				token = result.getString("token");
 				this.token = token;
 				Database.getDB().saveToken(token, this.addr);
