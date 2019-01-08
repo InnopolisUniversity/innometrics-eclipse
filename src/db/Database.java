@@ -60,6 +60,8 @@ public class Database {
 				" start_date     varchar(50)     NOT NULL, " + 
 				" end_date       varchar(50)	NOT NULL, " + 
 				" ip_addr		 varchar(50), "
+				+ " activity_type		 varchar(50) NOT NULL, "
+				+ " value		 TEXT, "
 				+ "mac_addr 	 varchar(50));"
 				+ "CREATE TABLE TOKEN (ID INTEGER PRIMARY KEY, "
 				+ "value varchar(100) NOT NULL, "
@@ -74,11 +76,12 @@ public class Database {
 	public void insertNewMetric(Metric metric) {
 		Statement stmt = getNewStatement();
 		String sql = String.format("INSERT INTO METRIC "
-				+ "(name, start_date, end_date, ip_addr, mac_addr) " +
+				+ "(name, start_date, end_date, ip_addr, mac_addr,"
+				+ "activity_type, value) " +
 				"VALUES ('%s', '%s', '%s',"
-				+ " '%s', '%s');", metric.tabName,
+				+ " '%s', '%s', '%s', '%s');", metric.tabName,
 				metric.startDate.toString(), metric.endDate.toString(), metric.session.ipAddr,
-				metric.session.macAddr);
+				metric.session.macAddr, metric.activity_type, metric.value);
 		System.out.println(sql);
 		try {
 			stmt.executeUpdate(sql);
@@ -102,9 +105,11 @@ public class Database {
 				String endDate  = rs.getString("end_date");
 				String ipAddr = rs.getString("ip_addr");
 				String macAddr = rs.getString("mac_addr");
+				String activityType = rs.getString("activity_type");
+				String value = rs.getString("value");
 				
 				metrics.add(new Metric(id, name, Instant.parse(startDate),
-						Instant.parse(endDate),
+						Instant.parse(endDate), activityType, value,
 						new Session(ipAddr, macAddr)));
 			}
 			rs.close();
@@ -127,7 +132,7 @@ public class Database {
 		}
 		String sql = String.format("DELETE FROM METRIC WHERE id in %s;",
 				ids.toString().replace('[', '(').replace(']', ')'));
-		System.out.println(sql);
+
 		Statement stmt = getNewStatement();
 		try {
 			stmt.executeUpdate(sql);
@@ -155,7 +160,7 @@ public class Database {
 		String sql = String.format("SELECT VALUE FROM TOKEN "
 				+ "WHERE addr='%s' ORDER"
 				+ " BY ID DESC LIMIT 1;", addr);
-		System.out.println(sql);
+
 		Statement stmt = getNewStatement();
 		String token = null;
 		try {
@@ -175,7 +180,7 @@ public class Database {
 		String sql = String.format("SELECT ADDR FROM TOKEN "
 				+ "ORDER"
 				+ " BY ID DESC LIMIT 1;");
-		System.out.println(sql);
+
 		Statement stmt = getNewStatement();
 		String addr = null;
 		try {

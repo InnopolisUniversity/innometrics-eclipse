@@ -9,6 +9,7 @@ public class Metric {
 	public Instant startDate;
 	public Instant endDate;
 	public Session session;
+	public String value = "";
 	
 	public Metric(String fileName) {
 		this.tabName = fileName;
@@ -16,13 +17,21 @@ public class Metric {
 		this.session = Session.getCurrentSession();
 	}
 	
+	public Metric(String fileName, String activity_type) {
+		this(fileName);
+		this.activity_type = activity_type;
+	}
+	
 	public Metric(int id, String fileName, Instant startDate, Instant endDate,
+			String activity_type, String value,
 			Session session) {
 		this.id = id;
 		this.tabName = fileName;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.session = session;
+		this.activity_type = activity_type;
+		this.value = value;
 	}
 	
 	public void finish() {
@@ -34,5 +43,7 @@ public class Metric {
 		System.out.println(this.startDate);
 		System.out.println(this.endDate);
 		System.out.println(this.session.ipAddr);
+		System.out.println(this.activity_type);
+		System.out.println(this.value);
 	}
 }
