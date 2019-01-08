@@ -34,6 +34,10 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 	public void earlyStartup() {
 		sendOfflineData();
 		IWorkbench wb = PlatformUI.getWorkbench();
+		IWorkbenchWindow window = wb.getWorkbenchWindows()[0];
+		addCodeListener(window.getActivePage().getActivePart());
+		addPageListener(window.getActivePage());
+		
 		wb.addWindowListener(generateWindowListener());
 		checkUnsendData();
 
@@ -133,7 +137,98 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 		}
 		codeMetrics.put(fileName, codeMetric);
 	}
+	
+	private void addPageListener(IWorkbenchPage page) {
+		IPartListener2 listener = pageListeners.get(page);
+		if (listener == null) {
+			listener = generateIPartListener2();
+			page.addPartListener(listener);
+			pageListeners.put(page, listener);
+		}
 
+	}
+		
+	private String getTextFromFile(ITextEditor source) {
+		ITextEditor textEditor = (ITextEditor)source;
+
+		IDocumentProvider provider = textEditor.getDocumentProvider();
+
+		IEditorInput input = textEditor.getEditorInput();
+
+		IDocument document = provider.getDocument(input);
+
+		String text = document.get();
+
+		return text;
+	}
+	
+	private void addCodeListener(IWorkbenchPart part) {
+		String title = part.getTitle();
+		
+		IPropertyListener listener = partListeners.get(part);
+		if (listener == null) {
+			listener = new IPropertyListener() {
+
+				@Override
+				public void propertyChanged(Object source, int propId) {
+					if (source instanceof ITextEditor)
+					{
+						String text = getTextFromFile((ITextEditor) source);
+						storeNewCodeMetric(title, text);
+					}
+				}
+			};
+
+			if (part instanceof ITextEditor) {
+				String text = getTextFromFile((ITextEditor) part);
+				storeNewCodeMetric(title, text);
+			}
+			part.addPropertyListener(listener);
+			partListeners.put(part, listener);
+		}
+	}
+	
+	private IPartListener2 generateIPartListener2() {
+		return new IPartListener2() {
+
+			@Override
+			public void partOpened(IWorkbenchPartReference partRef) {
+				storeNewMetric(partRef.getTitle());
+				addCodeListener(partRef.getPart(true));
+			}
+
+			@Override
+			public void partInputChanged(IWorkbenchPartReference partRef) {
+			}
+
+			@Override
+			public void partVisible(IWorkbenchPartReference partRef) {
+			}
+
+			@Override
+			public void partHidden(IWorkbenchPartReference partRef) {
+			}
+
+			@Override
+			public void partDeactivated(IWorkbenchPartReference partRef) {
+			}
+
+			@Override
+			public void partClosed(IWorkbenchPartReference partRef) {
+			}
+
+			@Override
+			public void partBroughtToTop(IWorkbenchPartReference partRef) {
+			}
+
+			@Override
+			public void partActivated(IWorkbenchPartReference partRef) {
+				storeNewMetric(partRef.getTitle());
+				addCodeListener(partRef.getPart(true));
+			}
+		};
+	}
+	
 	private IWindowListener generateWindowListener() {
 		return new IWindowListener() {
 			@Override
@@ -158,96 +253,6 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 				addPageListener(window.getActivePage());
 			}
 
-			private void addPageListener(IWorkbenchPage page) {
-				IPartListener2 listener = pageListeners.get(page);
-				if (listener == null) {
-					listener = generateIPartListener2();
-					page.addPartListener(listener);
-					pageListeners.put(page, listener);
-				}
-
-			}
-				
-			private String getTextFromFile(ITextEditor source) {
-				ITextEditor textEditor = (ITextEditor)source;
-
-				IDocumentProvider provider = textEditor.getDocumentProvider();
-
-				IEditorInput input = textEditor.getEditorInput();
-
-				IDocument document = provider.getDocument(input);
-
-				String text = document.get();
-
-				return text;
-			}
-			
-			private void addCodeListener(IWorkbenchPart part) {
-				String title = part.getTitle();
-				
-				IPropertyListener listener = partListeners.get(part);
-				if (listener == null) {
-					listener = new IPropertyListener() {
-
-						@Override
-						public void propertyChanged(Object source, int propId) {
-							if (source instanceof ITextEditor)
-							{
-								String text = getTextFromFile((ITextEditor) source);
-								storeNewCodeMetric(title, text);
-							}
-						}
-					};
-
-					if (part instanceof ITextEditor) {
-						String text = getTextFromFile((ITextEditor) part);
-						storeNewCodeMetric(title, text);
-					}
-					part.addPropertyListener(listener);
-					partListeners.put(part, listener);
-				}
-			}
-
-			private IPartListener2 generateIPartListener2() {
-				return new IPartListener2() {
-
-					@Override
-					public void partOpened(IWorkbenchPartReference partRef) {
-						storeNewMetric(partRef.getTitle());
-						addCodeListener(partRef.getPart(true));
-					}
-
-					@Override
-					public void partInputChanged(IWorkbenchPartReference partRef) {
-					}
-
-					@Override
-					public void partVisible(IWorkbenchPartReference partRef) {
-					}
-
-					@Override
-					public void partHidden(IWorkbenchPartReference partRef) {
-					}
-
-					@Override
-					public void partDeactivated(IWorkbenchPartReference partRef) {
-					}
-
-					@Override
-					public void partClosed(IWorkbenchPartReference partRef) {
-					}
-
-					@Override
-					public void partBroughtToTop(IWorkbenchPartReference partRef) {
-					}
-
-					@Override
-					public void partActivated(IWorkbenchPartReference partRef) {
-						storeNewMetric(partRef.getTitle());
-						addCodeListener(partRef.getPart(true));
-					}
-				};
-			}
 		};
 	}
 
