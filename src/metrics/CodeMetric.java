@@ -24,14 +24,45 @@ public class CodeMetric extends Metric {
 		List<Metric> metrics = new ArrayList<>();
 		for (Delta delta: diff.getDeltas()) {
 			String deltaName = delta.getClass().getName().replace("difflib.", "").replace("Delta", "").toLowerCase();
-			Integer amount = Math.max(delta.getRevised().getLines().size(), delta.getOriginal().getLines().size());
+			Integer oldLinesSize = delta.getOriginal().getLines().size();
+			Integer newLinesSize = delta.getRevised().getLines().size();
+			Integer amount = Math.max(oldLinesSize, newLinesSize);
+			
 			if (amount > 0) {
 				metrics.add(new Metric(0, tabName, startDate, endDate,
 						"eclipse_lines_" + deltaName,
 						Integer.toString(amount),
 						session));
 			}
+			Metric commentsMetric = findComments(delta);
+			if (commentsMetric != null) {
+				metrics.add(commentsMetric);
+			}
 		}
 		return metrics;
+	}
+	
+	private Metric findComments(Delta delta) {
+		String[] commentStrings = {"//", "%", "#", "*"};
+
+		Integer oldLinesSize = delta.getOriginal().getLines().size();
+		Integer newLinesSize = delta.getRevised().getLines().size();
+		
+		List<String> lines = (List<String>) delta.getRevised().getLines();
+		int amount = 0;
+		for (int i = oldLinesSize; i < newLinesSize; i++) {
+			String line = lines.get(i);
+			if (Arrays.stream(commentStrings).anyMatch(line::contains)) {
+				amount += 1;
+			}
+			
+		}
+		if (amount > 0) {
+			return new Metric(0, tabName, startDate, endDate,
+					"eclipse_comments_added",
+					Integer.toString(amount),
+					session);
+		}
+		return null;
 	}
 }

@@ -6,8 +6,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.IExecutionListener;
+import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.*;
+import org.eclipse.ui.commands.ICommandService;
+
 import db.Database;
 import metrics.CodeMetric;
 import metrics.Metric;
@@ -30,6 +36,39 @@ public class EclipseLoggerStartup extends AbstractUIPlugin implements IStartup {
 		IWorkbench wb = PlatformUI.getWorkbench();
 		wb.addWindowListener(generateWindowListener());
 		checkUnsendData();
+		
+		ICommandService service = (ICommandService) wb.getService(ICommandService.class);
+		
+	    IExecutionListener executionListener = new IExecutionListener() {
+
+			@Override
+			public void notHandled(String commandId, NotHandledException exception) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void postExecuteFailure(String commandId, ExecutionException exception) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void postExecuteSuccess(String commandId, Object returnValue) {
+				Metric metric = new Metric(commandId, "eclipse_executed_command");
+				metric.finish();
+				saveMetric(metric);
+				
+			}
+
+			@Override
+			public void preExecute(String commandId, ExecutionEvent event) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		};
+	    service.addExecutionListener(executionListener);
 	}
 	
 	private void checkUnsendData() {

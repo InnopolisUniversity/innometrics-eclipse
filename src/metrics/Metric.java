@@ -17,6 +17,11 @@ public class Metric {
 		this.session = Session.getCurrentSession();
 	}
 	
+	public Metric(String fileName, String activity_type) {
+		this(fileName);
+		this.activity_type = activity_type;
+	}
+	
 	public Metric(int id, String fileName, Instant startDate, Instant endDate,
 			String activity_type, String value,
 			Session session) {
