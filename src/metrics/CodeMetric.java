@@ -34,35 +34,77 @@ public class CodeMetric extends Metric {
 						Integer.toString(amount),
 						session));
 			}
-			Metric commentsMetric = findComments(delta);
-			if (commentsMetric != null) {
-				metrics.add(commentsMetric);
-			}
+			metrics.addAll(findComments(delta));
+			metrics.addAll(findNewTests(delta));
 		}
 		return metrics;
 	}
 	
-	private Metric findComments(Delta delta) {
+	private List<Metric> findComments(Delta delta) {
 		String[] commentStrings = {"//", "%", "#", "*"};
 
-		Integer oldLinesSize = delta.getOriginal().getLines().size();
-		Integer newLinesSize = delta.getRevised().getLines().size();
+		List<String> lines = (List<String>) delta.getRevised().getLines();
+		int amountAdded = 0;
+		for (String line: lines) {
+			if (Arrays.stream(commentStrings).anyMatch(line::contains)) {
+				amountAdded += 1;
+			}
+		}
+		
+		lines = (List<String>) delta.getOriginal().getLines();
+		int amountDeleted = 0;
+		for (String line: lines) {
+			if (Arrays.stream(commentStrings).anyMatch(line::contains)) {
+				amountDeleted += 1;
+			}
+		}
+		List<Metric> metrics = new ArrayList<Metric>();
+		if (amountAdded > 0) {
+			metrics.add(new Metric(0, tabName, startDate, endDate,
+					"eclipse_comments_added",
+					Integer.toString(amountAdded),
+					session));
+		}
+		if (amountDeleted > 0) {
+			metrics.add(new Metric(0, tabName, startDate, endDate,
+					"eclipse_comments_deleted",
+					Integer.toString(amountDeleted),
+					session));
+		}
+		return metrics;
+	}
+	
+	private List<Metric> findNewTests(Delta delta) {
+		String[] testDeclarationStrings = {"@Test", "@Given", "@When", "@Then"};
 		
 		List<String> lines = (List<String>) delta.getRevised().getLines();
-		int amount = 0;
-		for (int i = oldLinesSize; i < newLinesSize; i++) {
-			String line = lines.get(i);
-			if (Arrays.stream(commentStrings).anyMatch(line::contains)) {
-				amount += 1;
+		int amountAdded = 0;
+		for (String line: lines) {
+			if (Arrays.stream(testDeclarationStrings).anyMatch(line::contains)) {
+				amountAdded += 1;
 			}
-			
 		}
-		if (amount > 0) {
-			return new Metric(0, tabName, startDate, endDate,
-					"eclipse_comments_added",
-					Integer.toString(amount),
-					session);
+		
+		lines = (List<String>) delta.getOriginal().getLines();
+		int amountDeleted = 0;
+		for (String line: lines) {
+			if (Arrays.stream(testDeclarationStrings).anyMatch(line::contains)) {
+				amountDeleted += 1;
+			}
 		}
-		return null;
+		List<Metric> metrics = new ArrayList<Metric>();
+		if (amountAdded > 0) {
+			metrics.add(new Metric(0, tabName, startDate, endDate,
+					"eclipse_tests_added",
+					Integer.toString(amountAdded),
+					session));
+		}
+		if (amountDeleted > 0) {
+			metrics.add(new Metric(0, tabName, startDate, endDate,
+					"eclipse_tests_deleted",
+					Integer.toString(amountDeleted),
+					session));
+		}
+		return metrics;
 	}
 }
